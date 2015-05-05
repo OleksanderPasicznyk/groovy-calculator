@@ -8,6 +8,7 @@ import javax.swing.JTextField
 import java.awt.BorderLayout
 import java.awt.Font
 import java.awt.GraphicsEnvironment
+import java.text.NumberFormat
 
 
 public class CalculatorGUI {
@@ -23,6 +24,8 @@ public class CalculatorGUI {
 
     private GroovyShell groovyShell = new GroovyShell()
 
+    private String lastDoubleString = "";
+
     public static void main(String[] args){
         CalculatorGUI calculator = new CalculatorGUI();
         calculator.loadFont()
@@ -30,7 +33,7 @@ public class CalculatorGUI {
     }
 
     private void loadFont(){
-        File fontFile = new File("resources/fonts/LiquidCrystal-Normal.ttf")
+        File fontFile = new File("resources/fonts/joystix_monospace.ttf")
         URL fontUrl = fontFile.toURI().toURL()
         calculatorFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream())
         calculatorFont = calculatorFont.deriveFont(Font.PLAIN,45)
@@ -71,6 +74,7 @@ public class CalculatorGUI {
                 button(text: "C", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("C")})
                 button(text: "CE", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("CE")})
 
+                button(text: ".", horizontalTextPosition: JButton.CENTER, font: buttonFont, actionPerformed: {calculatorAction(".")})
                 button(text: "0", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(0)})
                 button(text: "=", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("=")})
             }
@@ -80,17 +84,38 @@ public class CalculatorGUI {
     }
 
     private void calculatorAction(Object actionValue){
-            if(actionValue instanceof Integer){
-                if(calcStack.isEmpty()){
+            if(actionValue instanceof Number) {
+                if (calcStack.isEmpty()) {
                     calcStack.push(actionValue)
                     display.setText(actionValue.toString())
-                }else{
-                    if(calcStack.peek() instanceof Integer){
+                } else {
+                    if (calcStack.peek() instanceof Integer) {
                         Integer number = calcStack.pop()
                         number = Integer.parseInt(number.toString() + actionValue)
                         calcStack.push(number)
                         display.setText(number.toString())
-                    }else{
+                    }else if(calcStack.peek() instanceof Double){
+                        Double lastStackObject =  calcStack.pop()
+                        String lastStackObjectString = lastStackObject.toString()
+                        if(lastStackObjectString.endsWith(".0")){
+                            println "ding"
+                            lastStackObjectString = lastStackObjectString.substring(0, lastStackObjectString.length() - 1)
+                        }
+                        if(!lastDoubleString.isEmpty()){
+                            lastStackObjectString = lastDoubleString
+                        }
+                        lastStackObjectString += actionValue
+                        println lastStackObjectString
+                        if(actionValue == 0){
+                            lastDoubleString = lastStackObjectString
+                        }else{
+                            lastDoubleString = ""
+                        }
+                        lastStackObject = Double.parseDouble(lastStackObjectString)
+                        println lastStackObject
+                        calcStack.push(lastStackObject)
+                        display.setText(lastStackObjectString)
+                    }else {
                         calcStack.push(actionValue)
                         display.setText(actionValue.toString())
                     }
@@ -128,8 +153,18 @@ public class CalculatorGUI {
             case "=":
                 calculateResult()
                 break;
+            case ".":
+                if(!calcStack.empty()){
+                    Object lastStackObject = calcStack.pop()
+                    if(lastStackObject instanceof Integer){
+                        Double newStackObject = lastStackObject.doubleValue()
+                        calcStack.push(newStackObject)
+                        display.setText(newStackObject.toString())
+                    }
+                }
+                break;
             default:
-                if(!calcStack.empty() && calcStack.peek() instanceof  Integer){
+                if(!calcStack.empty() && calcStack.peek() instanceof  Number){
                     calcStack.push(operation)
                 }
         }
@@ -144,7 +179,8 @@ public class CalculatorGUI {
             }
 
             try {
-                Integer result = groovyShell.evaluate(rowToCalculate)
+                Number result = groovyShell.evaluate(rowToCalculate)
+                println result.getClass()
                 calcStack = new Stack<>()
                 calcStack.push(result)
                 display.setText(result.toString())
