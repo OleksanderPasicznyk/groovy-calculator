@@ -36,7 +36,7 @@ public class CalculatorGUI {
         File fontFile = new File("resources/fonts/joystix_monospace.ttf")
         URL fontUrl = fontFile.toURI().toURL()
         calculatorFont = Font.createFont(Font.TRUETYPE_FONT, fontUrl.openStream())
-        calculatorFont = calculatorFont.deriveFont(Font.PLAIN,45)
+        calculatorFont = calculatorFont.deriveFont(Font.PLAIN,30)
         GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment()
         graphicsEnvironment.registerFont(calculatorFont)
     }
@@ -56,26 +56,26 @@ public class CalculatorGUI {
             panel(constraints: BorderLayout.CENTER, background: java.awt.Color.LIGHT_GRAY) {
                 gridLayout(cols: 5, rows: 4, vgap: 10, hgap: 10)
 
-                button(text: "7", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(7)})
-                button(text: "8", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(8)})
-                button(text: "9", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(9)})
+                button(text: "7", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(7L)})
+                button(text: "8", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(8L)})
+                button(text: "9", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(9L)})
                 button(text: "/", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("/")})
                 button(text: "*", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("*")})
 
-                button(text: "4", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(4)})
-                button(text: "5", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(5)})
-                button(text: "6", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(6)})
+                button(text: "4", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(4L)})
+                button(text: "5", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(5L)})
+                button(text: "6", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(6L)})
                 button(text: "-", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("-")})
                 button(text: "+", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("+")})
 
-                button(text: "1", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(1)})
-                button(text: "2", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(2)})
-                button(text: "3", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(3)})
+                button(text: "1", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(1L)})
+                button(text: "2", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(2L)})
+                button(text: "3", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(3L)})
                 button(text: "C", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("C")})
                 button(text: "CE", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("CE")})
 
                 button(text: ".", horizontalTextPosition: JButton.CENTER, font: buttonFont, actionPerformed: {calculatorAction(".")})
-                button(text: "0", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(0)})
+                button(text: "0", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction(0L)})
                 button(text: "=", horizontalTextPosition: JButton.CENTER, font:  buttonFont, actionPerformed: {calculatorAction("=")})
             }
 
@@ -84,49 +84,55 @@ public class CalculatorGUI {
     }
 
     private void calculatorAction(Object actionValue){
-            if(actionValue instanceof Number) {
-                if (calcStack.isEmpty()) {
+        if(actionValue instanceof Number) {
+            if (calcStack.isEmpty()) {
+                calcStack.push(actionValue)
+                display.setText(actionValue.toString())
+            } else {
+                if (calcStack.peek() instanceof Long) {
+                    actionForLong(actionValue)
+                }else if(calcStack.peek() instanceof Double){
+                    actionForDouble(actionValue)
+                }else {
                     calcStack.push(actionValue)
                     display.setText(actionValue.toString())
-                } else {
-                    if (calcStack.peek() instanceof Integer) {
-                        Integer number = calcStack.pop()
-                        number = Integer.parseInt(number.toString() + actionValue)
-                        calcStack.push(number)
-                        display.setText(number.toString())
-                    }else if(calcStack.peek() instanceof Double){
-                        Double lastStackObject =  calcStack.pop()
-                        String lastStackObjectString = lastStackObject.toString()
-                        if(lastStackObjectString.endsWith(".0")){
-                            println "ding"
-                            lastStackObjectString = lastStackObjectString.substring(0, lastStackObjectString.length() - 1)
-                        }
-                        if(!lastDoubleString.isEmpty()){
-                            lastStackObjectString = lastDoubleString
-                        }
-                        lastStackObjectString += actionValue
-                        println lastStackObjectString
-                        if(actionValue == 0){
-                            lastDoubleString = lastStackObjectString
-                        }else{
-                            lastDoubleString = ""
-                        }
-                        lastStackObject = Double.parseDouble(lastStackObjectString)
-                        println lastStackObject
-                        calcStack.push(lastStackObject)
-                        display.setText(lastStackObjectString)
-                    }else {
-                        calcStack.push(actionValue)
-                        display.setText(actionValue.toString())
-                    }
                 }
-            }else{
-                String action = (String) actionValue
-                addOperation(action)
             }
+        }else{
+            String action = (String) actionValue
+            addOperation(action)
+        }
+    }
 
+    private void actionForLong(Number selectedNumber){
+        Long number = calcStack.pop()
+        try {
+            number = Long.parseLong(number.toString() + selectedNumber)
+        }catch(NumberFormatException e){
+            println "Number is too long"
+        }
+        calcStack.push(number)
+        display.setText(number.toString())
+    }
 
-
+    private void actionForDouble(Number selectedNumber){
+        Double numberFromStack =  calcStack.pop()
+        String numberFromStackAsString = numberFromStack.toString()
+        if(numberFromStackAsString.endsWith(".0")){
+            numberFromStackAsString = numberFromStackAsString.substring(0, numberFromStackAsString.length() - 1)
+        }
+        if(!lastDoubleString.isEmpty()){
+            numberFromStackAsString = lastDoubleString
+        }
+        numberFromStackAsString += selectedNumber
+        if(selectedNumber == 0){
+            lastDoubleString = numberFromStackAsString
+        }else{
+            lastDoubleString = ""
+        }
+        numberFromStack = Double.parseDouble(numberFromStackAsString)
+        calcStack.push(numberFromStack)
+        display.setText(numberFromStackAsString)
     }
 
     private void addOperation(String operation){
@@ -156,7 +162,7 @@ public class CalculatorGUI {
             case ".":
                 if(!calcStack.empty()){
                     Object lastStackObject = calcStack.pop()
-                    if(lastStackObject instanceof Integer){
+                    if(lastStackObject instanceof Long){
                         Double newStackObject = lastStackObject.doubleValue()
                         calcStack.push(newStackObject)
                         display.setText(newStackObject.toString())
@@ -170,7 +176,7 @@ public class CalculatorGUI {
         }
     }
 
-    private Integer calculateResult(){
+    private Long calculateResult(){
         if(isStackReadyForCalculation()){
 
             String rowToCalculate = ""
@@ -180,7 +186,6 @@ public class CalculatorGUI {
 
             try {
                 Number result = groovyShell.evaluate(rowToCalculate)
-                println result.getClass()
                 calcStack = new Stack<>()
                 calcStack.push(result)
                 display.setText(result.toString())
