@@ -1,2 +1,4 @@
 # groovy-calculator
-A simple calculator implemented to complete the Groovy course at the university.
+A simple GUI calculator implemented with SwingBuilder to pass the Groovy course at the university.
+
+

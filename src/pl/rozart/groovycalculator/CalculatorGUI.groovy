@@ -111,8 +111,12 @@ public class CalculatorGUI {
                     addDigitToDisplay("0")
                 })
                 button(text: "=", horizontalTextPosition: JButton.CENTER, font: buttonFont, actionPerformed: {
-                    calculate(false)
-                })
+                    try{
+                        calculate(false)
+                    }catch (ArithmeticException e){
+                        clearAll()
+                    }
+               })
             }
 
 
@@ -124,7 +128,7 @@ public class CalculatorGUI {
             if (displayString.equals("0")) {
                 displayString = digit
                 println "Replaced zero with " + digit
-            } else if(displayString.endsWith(".0")){
+            } else if (displayString.endsWith(".0")) {
                 displayString = displayString.substring(0, displayString.length() - 1) + digit
                 println "Replaced decimal zero with " + digit
             } else {
@@ -135,10 +139,10 @@ public class CalculatorGUI {
             if (displayString.equals("0")) {
                 displayString = digit
                 println "Replaced zero with " + digit
-            }else if(displayString.endsWith(".0")){
+            } else if (displayString.endsWith(".0")) {
                 displayString = displayString.substring(0, displayString.length() - 1) + digit
                 println "Replaced decimal zero with " + digit
-            }else {
+            } else {
                 displayString += digit
                 println "Added digit " + digit + " to existing one"
             }
@@ -148,10 +152,14 @@ public class CalculatorGUI {
 
     private void addOperationToStack(String operation) {
         if (calculatorStack.size() == 2 && !displayString.isEmpty()) {
-            calculate(true)
-            calculatorStack.push(operation)
-            displayString = ""
-            println "Calculated and pushed operation: " + operation
+            try {
+                calculate(true)
+                calculatorStack.push(operation)
+                displayString = ""
+                println "Calculated and pushed operation: " + operation
+            } catch (ArithmeticException e) {
+                clearAll()
+            }
         } else if (calculatorStack.empty()) {
             BigDecimal number = new BigDecimal(displayString)
             calculatorStack.push(number)
@@ -161,7 +169,7 @@ public class CalculatorGUI {
         }
     }
 
-    private BigDecimal calculate(Boolean isAfterOperation) {
+    private BigDecimal calculate(Boolean isAfterOperation) throws ArithmeticException {
         if (calculatorStack.size() == 2) {
             BigDecimal number = new BigDecimal(displayString)
             calculatorStack.push(number)
@@ -170,16 +178,19 @@ public class CalculatorGUI {
             for (Object calculatorElement : calculatorStack) {
                 calculateString += calculatorElement.toString()
             }
-            BigDecimal result = null
-            result = groovyShell.evaluate(calculateString)
+
+            BigDecimal result = groovyShell.evaluate(calculateString)
+
             displayString = result.toString()
             refreshDisplay()
 
             calculatorStack = new Stack<>()
-            if(isAfterOperation){
+            if (isAfterOperation) {
                 calculatorStack.push(result)
             }
             println "Result is: " + displayString
+
+
         }
     }
 
@@ -207,8 +218,8 @@ public class CalculatorGUI {
             println "Decimal point added"
         }
     }
-    
-    private refreshDisplay(){
+
+    private refreshDisplay() {
         display.setText(displayString)
         println calculatorStack
     }
